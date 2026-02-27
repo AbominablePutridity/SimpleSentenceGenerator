@@ -40,77 +40,159 @@ public class SentenceGenerator {
     }
     
     /**
-     * Генерация предложения
+     * Проверить, есть ли у слова форма для указанного падежа
      */
-    public List<Word> generateSentence(int maxLength) {
-        List<Word> sentence = new ArrayList<>();
-        
-        // Шаг 1: Выбираем подлежащее (существительное)
-        Word subject = getRandomNoun();
-        if (subject == null) return sentence;
-        sentence.add(subject);
-        
-        // Шаг 2: С вероятностью 50% добавляем прилагательное перед существительным
-        if (random.nextBoolean()) {
-            Word adjective = getMatchingAdjective(subject.genus, Declension.NOMINATIVE);
-            if (adjective != null) {
-                sentence.add(0, adjective); // Вставляем в начало
-            }
-        }
-        
-        // Шаг 3: Добавляем глагол
-        Word verb = getRandomVerb();
-        if (verb != null) {
-            Word conjugatedVerb = conjugateVerb(verb, subject.genus);
-            sentence.add(conjugatedVerb);
-        }
-        
-        // Шаг 4: Добавляем остальные слова до достижения нужной длины
-        while (sentence.size() < maxLength) {
-            Word lastWord = sentence.get(sentence.size() - 1);
-            Word nextWord = null;
-            
-            // Выбираем следующее слово в зависимости от последнего
-            if (lastWord.partOfSpeech == PartOfSpeech.VERB) {
-                // После глагола может быть: наречие, предлог, существительное
-                int choice = random.nextInt(3);
-                if (choice == 0) {
-                    nextWord = getRandomAdverb();
-                } else if (choice == 1) {
-                    nextWord = getRandomPreposition();
-                } else {
-                    nextWord = getRandomNounInCase(Declension.ACCUSTIVE);
-                }
-            } 
-            else if (lastWord.partOfSpeech == PartOfSpeech.PREPOSITION) {
-                // После предлога - существительное в предложном падеже
-                nextWord = getRandomNounInCase(Declension.PREPOSITIONAL);
-            }
-            else if (lastWord.partOfSpeech == PartOfSpeech.NOUN) {
-                // После существительного может быть предлог
-                if (random.nextBoolean()) {
-                    nextWord = getRandomPreposition();
-                }
-            }
-            else if (lastWord.partOfSpeech == PartOfSpeech.ADVERB) {
-                // После наречия может быть глагол
-                if (random.nextBoolean()) {
-                    nextWord = getRandomVerb();
-                    if (nextWord != null) {
-                        nextWord = conjugateVerb(nextWord, sentence.get(0).genus);
-                    }
-                }
-            }
-            
-            if (nextWord != null) {
-                sentence.add(nextWord);
-            } else {
-                break;
-            }
-        }
-        
-        return sentence;
+    private boolean hasDeclensionForm(Word word, Declension declension) {
+        return word.declensionVal.containsKey(declension) && 
+               word.declensionVal.get(declension) != null &&
+               !word.declensionVal.get(declension).isEmpty();
     }
+    
+    /**
+     * Получить форму слова в нужном падеже (с проверкой)
+     */
+    private String getDeclensionForm(Word word, Declension declension) {
+        if (hasDeclensionForm(word, declension)) {
+            return word.declensionVal.get(declension);
+        }
+        // Если нет нужной формы, возвращаем исходное слово
+        return word.value;
+    }
+    
+    /**
+    * Получить правильный падеж для существительного после предлога
+    */
+   private Declension getCaseForPreposition(Word preposition) {
+       // Русские предлоги и соответствующие им падежи
+       switch (preposition.value) {
+           case "в":
+           case "на":
+           case "о":
+           case "при":
+               return Declension.PREPOSITIONAL; // предложный падеж
+           case "без":
+           case "для":
+           case "до":
+           case "из":
+           case "от":
+           case "у":
+               return Declension.GENITIVE; // родительный падеж
+           case "к":
+               return Declension.DATIVE; // дательный падеж
+           case "под":
+           case "за":
+           case "над":
+           case "перед":
+           case "между":
+               return Declension.CREATIVE; // творительный падеж
+           default:
+               return Declension.PREPOSITIONAL;
+       }
+   }
+
+   /**
+    * Генерация предложения
+    */
+   public List<Word> generateSentence(int maxLength) {
+       List<Word> sentence = new ArrayList<>();
+
+       // Шаг 1: Выбираем подлежащее (существительное)
+       Word subject = getRandomNoun();
+       if (subject == null) return sentence;
+       sentence.add(subject);
+
+       // Шаг 2: С вероятностью 50% добавляем прилагательное перед существительным
+       if (random.nextBoolean() && sentence.size() < maxLength) {
+           Word adjective = getMatchingAdjective(subject.genus, Declension.NOMINATIVE);
+           if (adjective != null) {
+               sentence.add(0, adjective);
+           }
+       }
+
+       // Шаг 3: Добавляем глагол (всегда)
+       if (sentence.size() < maxLength) {
+           Word verb = getRandomVerb();
+           if (verb != null) {
+               Word conjugatedVerb = conjugateVerb(verb, subject.genus);
+               sentence.add(conjugatedVerb);
+           }
+       }
+
+       // Шаг 4: Добавляем дополнения
+       boolean canAddMore = true;
+       int safetyCounter = 0;
+       Word lastPreposition = null;
+
+       while (sentence.size() < maxLength && canAddMore && safetyCounter < 20) {
+           safetyCounter++;
+           Word lastWord = sentence.get(sentence.size() - 1);
+           Word nextWord = null;
+
+           // Определяем возможное следующее слово на основе последнего
+           if (lastWord.partOfSpeech == PartOfSpeech.VERB) {
+               // После глагола может быть наречие или дополнение
+               int choice = random.nextInt(3);
+
+               if (choice == 0) {
+                   // Наречие
+                   nextWord = getRandomAdverb();
+               } else if (choice == 1) {
+                   // Предлог
+                   nextWord = getRandomPreposition();
+                   if (nextWord != null) {
+                       lastPreposition = nextWord;
+                   }
+               } else {
+                   // Существительное в винительном падеже
+                   nextWord = getRandomNounInCase(Declension.ACCUSTIVE);
+               }
+           } 
+           else if (lastWord.partOfSpeech == PartOfSpeech.PREPOSITION) {
+               // После предлога - существительное в правильном падеже
+               Declension requiredCase = getCaseForPreposition(lastWord);
+               nextWord = getRandomNounInCase(requiredCase);
+               lastPreposition = null;
+           }
+           else if (lastWord.partOfSpeech == PartOfSpeech.NOUN) {
+               // После существительного может быть предлог
+               if (random.nextInt(3) == 0) { // 33% шанс
+                   nextWord = getRandomPreposition();
+                   if (nextWord != null) {
+                       lastPreposition = nextWord;
+                   }
+               }
+           }
+           else if (lastWord.partOfSpeech == PartOfSpeech.ADVERB) {
+               // После наречия может быть предлог
+               if (random.nextBoolean()) {
+                   nextWord = getRandomPreposition();
+                   if (nextWord != null) {
+                       lastPreposition = nextWord;
+                   }
+               } else {
+                   canAddMore = false;
+               }
+           }
+
+           // Проверяем, что получили валидное слово
+           if (nextWord != null) {
+               Word finalNextWord = nextWord;
+               // Проверяем, что слово не повторяется слишком часто
+               boolean isDuplicate = sentence.stream()
+                   .filter(w -> w.partOfSpeech == finalNextWord.partOfSpeech)
+                   .count() > 2;
+
+               if (!isDuplicate) {
+                   sentence.add(nextWord);
+               }
+           } else {
+               // Если не можем добавить слово, уменьшаем шанс продолжения
+               canAddMore = random.nextInt(100) < 30;
+           }
+       }
+
+       return sentence;
+   }
     
     /**
      * Получить случайное существительное
@@ -118,9 +200,13 @@ public class SentenceGenerator {
     private Word getRandomNoun() {
         List<Word> nouns = getWordsByPartOfSpeech(PartOfSpeech.NOUN);
         if (nouns.isEmpty()) return null;
+        
         Word noun = nouns.get(random.nextInt(nouns.size()));
         Word copy = copyWord(noun);
-        copy.value = copy.declensionVal.get(Declension.NOMINATIVE);
+        
+        String nominative = getDeclensionForm(copy, Declension.NOMINATIVE);
+        copy.value = nominative;
+        
         return copy;
     }
     
@@ -130,9 +216,24 @@ public class SentenceGenerator {
     private Word getRandomNounInCase(Declension declension) {
         List<Word> nouns = getWordsByPartOfSpeech(PartOfSpeech.NOUN);
         if (nouns.isEmpty()) return null;
-        Word noun = nouns.get(random.nextInt(nouns.size()));
+        
+        // Фильтруем существительные, у которых есть нужный падеж
+        List<Word> validNouns = nouns.stream()
+            .filter(noun -> hasDeclensionForm(noun, declension))
+            .collect(Collectors.toList());
+        
+        if (validNouns.isEmpty()) {
+            // Если нет слов с нужным падежом, берем любое
+            Word noun = nouns.get(random.nextInt(nouns.size()));
+            Word copy = copyWord(noun);
+            copy.value = copy.value; // Оставляем как есть
+            return copy;
+        }
+        
+        Word noun = validNouns.get(random.nextInt(validNouns.size()));
         Word copy = copyWord(noun);
-        copy.value = copy.declensionVal.get(declension);
+        copy.value = getDeclensionForm(copy, declension);
+        
         return copy;
     }
     
@@ -141,15 +242,26 @@ public class SentenceGenerator {
      */
     private Word getMatchingAdjective(Genus genus, Declension declension) {
         List<Word> adjectives = getWordsByPartOfSpeech(PartOfSpeech.ADJECTIVE);
+        
+        // Ищем прилагательные подходящего рода
         List<Word> matching = adjectives.stream()
             .filter(adj -> adj.genus == genus)
+            .filter(adj -> hasDeclensionForm(adj, declension))
             .collect(Collectors.toList());
         
-        if (matching.isEmpty()) return null;
+        if (matching.isEmpty()) {
+            // Если нет точного совпадения, берем любое прилагательное
+            if (adjectives.isEmpty()) return null;
+            Word adj = adjectives.get(random.nextInt(adjectives.size()));
+            Word copy = copyWord(adj);
+            copy.value = getDeclensionForm(copy, declension);
+            return copy;
+        }
         
         Word adj = matching.get(random.nextInt(matching.size()));
         Word copy = copyWord(adj);
-        copy.value = copy.declensionVal.get(declension);
+        copy.value = getDeclensionForm(copy, declension);
+        
         return copy;
     }
     
@@ -159,7 +271,9 @@ public class SentenceGenerator {
     private Word getRandomVerb() {
         List<Word> verbs = getWordsByPartOfSpeech(PartOfSpeech.VERB);
         if (verbs.isEmpty()) return null;
-        return copyWord(verbs.get(random.nextInt(verbs.size())));
+        
+        Word verb = verbs.get(random.nextInt(verbs.size()));
+        return copyWord(verb);
     }
     
     /**
@@ -168,7 +282,9 @@ public class SentenceGenerator {
     private Word getRandomPreposition() {
         List<Word> preps = getWordsByPartOfSpeech(PartOfSpeech.PREPOSITION);
         if (preps.isEmpty()) return null;
-        return copyWord(preps.get(random.nextInt(preps.size())));
+        
+        Word prep = preps.get(random.nextInt(preps.size()));
+        return copyWord(prep);
     }
     
     /**
@@ -177,7 +293,9 @@ public class SentenceGenerator {
     private Word getRandomAdverb() {
         List<Word> adverbs = getWordsByPartOfSpeech(PartOfSpeech.ADVERB);
         if (adverbs.isEmpty()) return null;
-        return copyWord(adverbs.get(random.nextInt(adverbs.size())));
+        
+        Word adverb = adverbs.get(random.nextInt(adverbs.size()));
+        return copyWord(adverb);
     }
     
     /**
@@ -185,16 +303,32 @@ public class SentenceGenerator {
      */
     private Word conjugateVerb(Word verb, Genus genus) {
         Word copy = copyWord(verb);
+        
+        // Проверяем наличие формы прошедшего времени
+        if (!copy.timesVal.containsKey(Time.PAST)) {
+            // Если нет, возвращаем как есть
+            return copy;
+        }
+        
         String pastForm = copy.timesVal.get(Time.PAST);
         
         if (genus == Genus.MASCULINE) {
             copy.value = pastForm;
         } else if (genus == Genus.FEMININE) {
-            copy.value = pastForm.replace("л", "ла");
+            // Простая замена окончания
+            if (pastForm.endsWith("л")) {
+                copy.value = pastForm + "а";
+            } else {
+                copy.value = pastForm;
+            }
         } else if (genus == Genus.NEUTER) {
-            copy.value = pastForm.replace("л", "ло");
+            if (pastForm.endsWith("л")) {
+                copy.value = pastForm + "о";
+            } else {
+                copy.value = pastForm;
+            }
         } else {
-            copy.value = pastForm.replace("л", "ли");
+            copy.value = pastForm;
         }
         
         return copy;
@@ -205,24 +339,31 @@ public class SentenceGenerator {
      */
     public String sentenceToString(List<Word> sentence) {
         if (sentence.isEmpty()) return "";
-        
+
         StringBuilder sb = new StringBuilder();
-        
+
         for (int i = 0; i < sentence.size(); i++) {
             Word word = sentence.get(i);
-            
+
             if (i == 0) {
+                // Первое слово с большой буквы
                 sb.append(Character.toUpperCase(word.value.charAt(0)))
                   .append(word.value.substring(1));
             } else {
-                sb.append(word.value);
-            }
-            
-            if (i < sentence.size() - 1) {
+                // Всегда добавляем пробел перед следующим словом
                 sb.append(" ");
+
+                // Проверяем, не является ли предыдущее слово предлогом
+                Word prevWord = sentence.get(i - 1);
+                if (prevWord.partOfSpeech == PartOfSpeech.PREPOSITION) {
+                    // Если предыдущее слово - предлог, пишем через пробел как обычно
+                    sb.append(word.value);
+                } else {
+                    sb.append(word.value);
+                }
             }
         }
-        
+
         sb.append(".");
         return sb.toString();
     }

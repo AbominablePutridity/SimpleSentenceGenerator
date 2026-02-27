@@ -14,21 +14,21 @@ import jsentance.project.wordManager.Word;
 public class JSentance {
 
     public static void main(String[] args) {
-        // ===== 1. СОЗДАЕМ СЛОВА =====
-        List<Word> words = createVocabulary();
+        // 1. СОЗДАЕМ ОГРОМНЫЙ СЛОВАРЬ
+        List<Word> vocabulary = createVocabulary();
+        System.out.println("Загружено слов: " + vocabulary.size());
         
-        // ===== 2. СОЗДАЕМ ГЕНЕРАТОР =====
-        SentenceGenerator generator = new SentenceGenerator(words);
+        // 2. СОЗДАЕМ ГЕНЕРАТОР
+        SentenceGenerator generator = new SentenceGenerator(vocabulary);
         
-        // ===== 3. ГЕНЕРИРУЕМ ПРЕДЛОЖЕНИЯ =====
+        // 3. ГЕНЕРИРУЕМ МАКСИМАЛЬНО ДЛИННЫЕ ПРЕДЛОЖЕНИЯ
         System.out.println("==========================================");
-        System.out.println("   ГЕНЕРАЦИЯ ГРАММАТИЧЕСКИ ПРАВИЛЬНЫХ ПРЕДЛОЖЕНИЙ");
+        System.out.println("   ГЕНЕРАЦИЯ ДЛИННЫХ ПРЕДЛОЖЕНИЙ");
         System.out.println("==========================================\n");
         
-        // Генерируем 5 предложений разной длины
-        for (int i = 1; i <= 5; i++) {
-            int length = 5 + i; // от 6 до 10 слов
-            List<Word> sentence = generator.generateSentence(length);
+        // Генерируем 10 предложений разной длины (до 1000 слов)
+        for (int i = 1; i <= 10; i++) {
+            List<Word> sentence = generator.generateSentence(1000);
             System.out.println(i + ". " + generator.sentenceToString(sentence));
         }
         
@@ -40,50 +40,153 @@ public class JSentance {
     private static List<Word> createVocabulary() {
         List<Word> words = new ArrayList<>();
         
-        // СУЩЕСТВИТЕЛЬНЫЕ
-        words.add(new Word("кот", Genus.MASCULINE, PartOfSpeech.NOUN));
-        words.add(new Word("собака", Genus.FEMININE, PartOfSpeech.NOUN));
-        words.add(new Word("дом", Genus.MASCULINE, PartOfSpeech.NOUN));
-        words.add(new Word("машина", Genus.FEMININE, PartOfSpeech.NOUN));
-        words.add(new Word("дерево", Genus.NEUTER, PartOfSpeech.NOUN));
-        words.add(new Word("город", Genus.MASCULINE, PartOfSpeech.NOUN));
-        words.add(new Word("река", Genus.FEMININE, PartOfSpeech.NOUN));
-        words.add(new Word("солнце", Genus.NEUTER, PartOfSpeech.NOUN));
-        words.add(new Word("стол", Genus.MASCULINE, PartOfSpeech.NOUN));
-        words.add(new Word("книга", Genus.FEMININE, PartOfSpeech.NOUN));
-        words.add(new Word("девушка", Genus.FEMININE, PartOfSpeech.NOUN));
+        // СУЩЕСТВИТЕЛЬНЫЕ (150+ штук)
         
-        // ПРИЛАГАТЕЛЬНЫЕ
-        words.add(new Word("красный", Genus.MASCULINE, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("красная", Genus.FEMININE, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("красное", Genus.NEUTER, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("большой", Genus.MASCULINE, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("большая", Genus.FEMININE, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("большое", Genus.NEUTER, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("маленький", Genus.MASCULINE, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("маленькая", Genus.FEMININE, PartOfSpeech.ADJECTIVE));
-        words.add(new Word("маленькое", Genus.NEUTER, PartOfSpeech.ADJECTIVE));
+        // Мужской род (50+)
+        String[] masculineNouns = {
+            // Люди
+            "человек", "мужчина", "мальчик", "парень", "дедушка", "отец", "сын", "брат", "друг", "враг",
+            // Животные
+            "кот", "пес", "волк", "медведь", "заяц", "лис", "тигр", "лев", "слон", "конь",
+            // Предметы
+            "дом", "стол", "стул", "шкаф", "диван", "ковер", "телефон", "компьютер", "телевизор", "холодильник",
+            "стакан", "чайник", "нож", "вилка", "топор", "молоток", "ключ", "замок", "зонт", "рюкзак",
+            // Природа
+            "лес", "город", "ветер", "дождь", "снег", "огонь", "камень", "песок", "берег", "пол",
+            "потолок", "угол", "коридор", "балкон", "гараж", "подъезд", "лифт", "этаж", "номер", "адрес"
+        };
+        for (String noun : masculineNouns) {
+            words.add(new Word(noun, Genus.MASCULINE, PartOfSpeech.NOUN));
+        }
         
-        // ГЛАГОЛЫ
-        words.add(new Word("бежать", Genus.NONE, PartOfSpeech.VERB));
-        words.add(new Word("сидеть", Genus.NONE, PartOfSpeech.VERB));
-        words.add(new Word("лежать", Genus.NONE, PartOfSpeech.VERB));
-        words.add(new Word("стоять", Genus.NONE, PartOfSpeech.VERB));
-        words.add(new Word("думать", Genus.NONE, PartOfSpeech.VERB));
-        words.add(new Word("говорить", Genus.NONE, PartOfSpeech.VERB));
-        words.add(new Word("читать", Genus.NONE, PartOfSpeech.VERB));
+        // Женский род (50+)
+        String[] feminineNouns = {
+            // Люди
+            "женщина", "девушка", "девочка", "бабушка", "мать", "дочь", "сестра", "подруга", "учительница", "студентка",
+            // Животные
+            "собака", "кошка", "лиса", "волчица", "медведица", "тигрица", "львица", "слониха", "лошадь", "корова",
+            // Предметы
+            "машина", "книга", "ручка", "тетрадь", "лампа", "чашка", "тарелка", "ложка", "кастрюля", "сковорода",
+            "дверь", "стена", "крыша", "полка", "вешалка", "занавеска", "подушка", "одеяло", "простыня", "скатерть",
+            // Природа
+            "река", "гора", "вода", "земля", "трава", "дорога", "тропинка", "поляна", "роща", "степь",
+            "радуга", "молния", "гроза", "буря", "вьюга", "метель", "капля", "роса", "лужа", "волна"
+        };
+        for (String noun : feminineNouns) {
+            words.add(new Word(noun, Genus.FEMININE, PartOfSpeech.NOUN));
+        }
         
-        // ПРЕДЛОГИ
-        words.add(new Word("в", Genus.NONE, PartOfSpeech.PREPOSITION));
-        words.add(new Word("на", Genus.NONE, PartOfSpeech.PREPOSITION));
-        words.add(new Word("под", Genus.NONE, PartOfSpeech.PREPOSITION));
-        words.add(new Word("о", Genus.NONE, PartOfSpeech.PREPOSITION));
+        // Средний род (50+)
+        String[] neuterNouns = {
+            // Предметы
+            "дерево", "окно", "зеркало", "полотенце", "одеяло", "покрывало", "мыло", "полотенце", "ведро", "корыто",
+            "яблоко", "яйцо", "молоко", "мясо", "масло", "варенье", "печенье", "мороженое", "желе", "тесто",
+            // Природа
+            "солнце", "море", "небо", "поле", "озеро", "облако", "болото", "ущелье", "плато", "побережье",
+            // Абстрактные
+            "животное", "насекомое", "растение", "существо", "чудовище", "божество", "привидение", "чудо", "зло", "добро",
+            "время", "имя", "слово", "дело", "чувство", "настроение", "желание", "сомнение", "терпение", "внимание",
+            "здание", "строение", "сооружение", "помещение", "жилище", "убежище", "хранилище", "кладбище", "городище", "пожарище"
+        };
+        for (String noun : neuterNouns) {
+            words.add(new Word(noun, Genus.NEUTER, PartOfSpeech.NOUN));
+        }
         
-        // НАРЕЧИЯ
-        words.add(new Word("быстро", Genus.NONE, PartOfSpeech.ADVERB));
-        words.add(new Word("медленно", Genus.NONE, PartOfSpeech.ADVERB));
-        words.add(new Word("громко", Genus.NONE, PartOfSpeech.ADVERB));
-        words.add(new Word("тихо", Genus.NONE, PartOfSpeech.ADVERB));
+        // ПРИЛАГАТЕЛЬНЫЕ (120+ штук)
+        
+        // Цвета (15 цветов * 3 рода = 45)
+        String[] colors = {
+            "красный", "оранжевый", "желтый", "зеленый", "голубой", "синий", "фиолетовый",
+            "розовый", "коричневый", "белый", "черный", "серый", "золотой", "серебряный", "бронзовый"
+        };
+        for (String color : colors) {
+            words.add(new Word(color, Genus.MASCULINE, PartOfSpeech.ADJECTIVE));
+            words.add(new Word(color.replace("ый", "ая").replace("ой", "ая"), Genus.FEMININE, PartOfSpeech.ADJECTIVE));
+            words.add(new Word(color.replace("ый", "ое").replace("ой", "ое"), Genus.NEUTER, PartOfSpeech.ADJECTIVE));
+        }
+        
+        // Размеры (10 размеров * 3 рода = 30)
+        String[] sizes = {
+            "большой", "маленький", "огромный", "гигантский", "колоссальный",
+            "крошечный", "мелкий", "крупный", "высокий", "низкий"
+        };
+        for (String size : sizes) {
+            words.add(new Word(size, Genus.MASCULINE, PartOfSpeech.ADJECTIVE));
+            words.add(new Word(size.replace("ый", "ая").replace("ий", "ая"), Genus.FEMININE, PartOfSpeech.ADJECTIVE));
+            words.add(new Word(size.replace("ый", "ое").replace("ий", "ее"), Genus.NEUTER, PartOfSpeech.ADJECTIVE));
+        }
+        
+        // Качества (15 качеств * 3 рода = 45)
+        String[] qualities = {
+            "старый", "новый", "молодой", "древний", "современный",
+            "красивый", "прекрасный", "уродливый", "страшный", "милый",
+            "умный", "глупый", "мудрый", "талантливый", "способный",
+            "добрый", "злой", "жестокий", "ласковый", "грубый",
+            "веселый", "грустный", "радостный", "печальный", "скучный",
+            "быстрый", "медленный", "стремительный", "неторопливый", "шустрый",
+            "громкий", "тихий", "звонкий", "глухой", "мелодичный",
+            "светлый", "темный", "яркий", "тусклый", "прозрачный"
+        };
+        for (String quality : qualities) {
+            words.add(new Word(quality, Genus.MASCULINE, PartOfSpeech.ADJECTIVE));
+            words.add(new Word(quality.replace("ый", "ая").replace("ий", "ая").replace("ой", "ая"), 
+                              Genus.FEMININE, PartOfSpeech.ADJECTIVE));
+            words.add(new Word(quality.replace("ый", "ое").replace("ий", "ее").replace("ой", "ое"), 
+                              Genus.NEUTER, PartOfSpeech.ADJECTIVE));
+        }
+        
+        // ГЛАГОЛЫ (70+ штук)
+        
+        String[] verbs = {
+            // Движение
+            "бежать", "идти", "ехать", "лететь", "плыть", "ползти", "прыгать", "скакать", "мчаться", "нестись",
+            "шагать", "бродить", "гулять", "путешествовать", "перемещаться",
+            // Положение
+            "сидеть", "лежать", "стоять", "висеть", "находиться", "располагаться",
+            // Ментальные
+            "думать", "размышлять", "соображать", "понимать", "знать", "помнить", "забывать", "мечтать", "фантазировать",
+            "говорить", "рассказывать", "объяснять", "шептать", "кричать", "молчать", "спрашивать", "отвечать",
+            // Действия
+            "читать", "писать", "рисовать", "чертить", "лепить", "строгать", "пилить", "копать", "строить", "чинить",
+            "есть", "пить", "готовить", "жарить", "варить", "печь", "солить", "перчить", "мешать", "резать",
+            // Состояния
+            "спать", "отдыхать", "бодрствовать", "дремать", "просыпаться", "засыпать",
+            "болеть", "выздоравливать", "чихать", "кашлять", "лечиться",
+            // Эмоции
+            "радоваться", "грустить", "печалиться", "веселиться", "злиться", "сердиться", "бояться", "пугаться",
+            "любить", "ненавидеть", "уважать", "презирать", "восхищаться", "восторгаться"
+        };
+        for (String verb : verbs) {
+            words.add(new Word(verb, Genus.NONE, PartOfSpeech.VERB));
+        }
+        
+        // ПРЕДЛОГИ (30+ штук)
+        
+        String[] prepositions = {
+            "в", "во", "на", "под", "над", "за", "перед", "между", "среди", "с", "со",
+            "о", "об", "обо", "при", "без", "безо", "для", "до", "из", "изо", "от", "ото",
+            "у", "около", "возле", "вокруг", "мимо", "через", "сквозь", "вдоль", "поперек",
+            "ради", "благодаря", "согласно", "вопреки", "несмотря на", "ввиду", "вследствие"
+        };
+        for (String prep : prepositions) {
+            words.add(new Word(prep, Genus.NONE, PartOfSpeech.PREPOSITION));
+        }
+        
+        // НАРЕЧИЯ (30+ штук)
+        
+        String[] adverbs = {
+            "быстро", "медленно", "стремительно", "неторопливо", "мгновенно", "вечно",
+            "громко", "тихо", "звонко", "приглушенно", "шепотом", "криком",
+            "хорошо", "плохо", "отлично", "ужасно", "прекрасно", "кошмарно",
+            "весело", "грустно", "радостно", "печально", "тоскливо", "восторженно",
+            "легко", "трудно", "просто", "сложно", "элементарно", "мучительно",
+            "высоко", "низко", "далеко", "близко", "глубоко", "мелко",
+            "всегда", "никогда", "иногда", "часто", "редко", "постоянно",
+            "утром", "днем", "вечером", "ночью", "зимой", "летом", "весной", "осенью"
+        };
+        for (String adv : adverbs) {
+            words.add(new Word(adv, Genus.NONE, PartOfSpeech.ADVERB));
+        }
         
         return words;
     }

@@ -43,44 +43,68 @@ public class Word {
             return;
         }
         
-        // Для существительных и прилагательных - пытаемся склонить
         String wordLower = value.toLowerCase();
         int length = wordLower.length();
         
-        // Правила для разных окончаний
-        if (wordLower.endsWith("а") || wordLower.endsWith("я")) {
-            // Женский род на -а, -я
-            String stem = wordLower.substring(0, length - 1);
-            declensionVal.put(Declension.NOMINATIVE, wordLower);
-            declensionVal.put(Declension.GENITIVE, stem + (wordLower.endsWith("а") ? "ы" : "и"));
-            declensionVal.put(Declension.DATIVE, stem + "е");
-            declensionVal.put(Declension.ACCUSTIVE, stem + (wordLower.endsWith("а") ? "у" : "ю"));
-            declensionVal.put(Declension.CREATIVE, stem + (wordLower.endsWith("а") ? "ой" : "ей"));
-            declensionVal.put(Declension.PREPOSITIONAL, stem + "е");
-        }
-        else if (wordLower.endsWith("о") || wordLower.endsWith("е")) {
-            // Средний род на -о, -е
-            String stem = wordLower.substring(0, length - 1);
-            declensionVal.put(Declension.NOMINATIVE, wordLower);
-            declensionVal.put(Declension.GENITIVE, stem + (wordLower.endsWith("о") ? "а" : "я"));
-            declensionVal.put(Declension.DATIVE, stem + (wordLower.endsWith("о") ? "у" : "ю"));
-            declensionVal.put(Declension.ACCUSTIVE, wordLower);
-            declensionVal.put(Declension.CREATIVE, stem + (wordLower.endsWith("о") ? "ом" : "ем"));
-            declensionVal.put(Declension.PREPOSITIONAL, stem + "е");
-        }
-        else if (wordLower.endsWith("ь")) {
-            // Мягкий знак на конце
-            String stem = wordLower.substring(0, length - 1);
-            if (genus == Genus.MASCULINE) {
-                // Мужской род на -ь
+        // Определяем основу слова (без окончания)
+        String stem = wordLower;
+        String lastChar = wordLower.substring(length - 1);
+        String lastTwoChars = length > 1 ? wordLower.substring(length - 2) : lastChar;
+        
+        // СУЩЕСТВИТЕЛЬНЫЕ
+        if (partOfSpeech == PartOfSpeech.NOUN) {
+            
+            // 1-е склонение (женский и мужской род на -а, -я)
+            if (wordLower.endsWith("а") || wordLower.endsWith("я")) {
+                stem = wordLower.substring(0, length - 1);
+                
                 declensionVal.put(Declension.NOMINATIVE, wordLower);
-                declensionVal.put(Declension.GENITIVE, stem + "я");
-                declensionVal.put(Declension.DATIVE, stem + "ю");
-                declensionVal.put(Declension.ACCUSTIVE, stem + "я");
-                declensionVal.put(Declension.CREATIVE, stem + "ем");
+                declensionVal.put(Declension.GENITIVE, stem + (wordLower.endsWith("а") ? "ы" : "и"));
+                declensionVal.put(Declension.DATIVE, stem + "е");
+                declensionVal.put(Declension.ACCUSTIVE, stem + (wordLower.endsWith("а") ? "у" : "ю"));
+                declensionVal.put(Declension.CREATIVE, stem + (wordLower.endsWith("а") ? "ой" : "ей"));
                 declensionVal.put(Declension.PREPOSITIONAL, stem + "е");
-            } else {
-                // Женский род на -ь
+            }
+            
+            // 2-е склонение (мужской род с нулевым окончанием, средний род на -о, -е)
+            else if (wordLower.endsWith("о") || wordLower.endsWith("е")) {
+                stem = wordLower.substring(0, length - 1);
+                
+                declensionVal.put(Declension.NOMINATIVE, wordLower);
+                declensionVal.put(Declension.GENITIVE, stem + (wordLower.endsWith("о") ? "а" : "я"));
+                declensionVal.put(Declension.DATIVE, stem + (wordLower.endsWith("о") ? "у" : "ю"));
+                declensionVal.put(Declension.ACCUSTIVE, wordLower); // для неодушевленных
+                declensionVal.put(Declension.CREATIVE, stem + (wordLower.endsWith("о") ? "ом" : "ем"));
+                declensionVal.put(Declension.PREPOSITIONAL, stem + "е");
+            }
+            
+            // Мужской род на согласную или -й
+            else if (!wordLower.endsWith("ь") && (wordLower.endsWith("й") || 
+                     "бвгджзйклмнпрстфхцчшщ".contains(lastChar))) {
+                
+                if (wordLower.endsWith("й")) {
+                    stem = wordLower.substring(0, length - 1);
+                    declensionVal.put(Declension.NOMINATIVE, wordLower);
+                    declensionVal.put(Declension.GENITIVE, stem + "я");
+                    declensionVal.put(Declension.DATIVE, stem + "ю");
+                    declensionVal.put(Declension.ACCUSTIVE, stem + "я"); // для одушевленных
+                    declensionVal.put(Declension.CREATIVE, stem + "ем");
+                    declensionVal.put(Declension.PREPOSITIONAL, stem + "е");
+                } else {
+                    // Согласная на конце
+                    declensionVal.put(Declension.NOMINATIVE, wordLower);
+                    declensionVal.put(Declension.GENITIVE, wordLower + "а");
+                    declensionVal.put(Declension.DATIVE, wordLower + "у");
+                    declensionVal.put(Declension.ACCUSTIVE, wordLower); // для неодушевленных
+                    declensionVal.put(Declension.CREATIVE, wordLower + "ом");
+                    declensionVal.put(Declension.PREPOSITIONAL, wordLower + "е");
+                }
+            }
+            
+            // 3-е склонение (женский род на -ь)
+            else if (wordLower.endsWith("ь") && genus == Genus.FEMININE) {
+                stem = wordLower.substring(0, length - 1);
+                
                 declensionVal.put(Declension.NOMINATIVE, wordLower);
                 declensionVal.put(Declension.GENITIVE, stem + "и");
                 declensionVal.put(Declension.DATIVE, stem + "и");
@@ -88,38 +112,106 @@ public class Word {
                 declensionVal.put(Declension.CREATIVE, stem + "ью");
                 declensionVal.put(Declension.PREPOSITIONAL, stem + "и");
             }
-        }
-        else if (wordLower.endsWith("й")) {
-            // Мужской род на -й
-            String stem = wordLower.substring(0, length - 1);
-            declensionVal.put(Declension.NOMINATIVE, wordLower);
-            declensionVal.put(Declension.GENITIVE, stem + "я");
-            declensionVal.put(Declension.DATIVE, stem + "ю");
-            declensionVal.put(Declension.ACCUSTIVE, stem + "я");
-            declensionVal.put(Declension.CREATIVE, stem + "ем");
-            declensionVal.put(Declension.PREPOSITIONAL, stem + "е");
-        }
-        else if (wordLower.endsWith("ый") || wordLower.endsWith("ий")) {
-            // Прилагательные мужского рода
-            String stem = wordLower.substring(0, length - 2);
-            declensionVal.put(Declension.NOMINATIVE, wordLower);
-            declensionVal.put(Declension.GENITIVE, stem + "ого");
-            declensionVal.put(Declension.DATIVE, stem + "ому");
-            declensionVal.put(Declension.ACCUSTIVE, stem + "ый");
-            declensionVal.put(Declension.CREATIVE, stem + "ым");
-            declensionVal.put(Declension.PREPOSITIONAL, stem + "ом");
-        }
-        else {
-            // Согласная на конце (мужской род)
-            declensionVal.put(Declension.NOMINATIVE, wordLower);
-            declensionVal.put(Declension.GENITIVE, wordLower + "а");
-            declensionVal.put(Declension.DATIVE, wordLower + "у");
-            declensionVal.put(Declension.ACCUSTIVE, wordLower);
-            declensionVal.put(Declension.CREATIVE, wordLower + "ом");
-            declensionVal.put(Declension.PREPOSITIONAL, wordLower + "е");
+            
+            // Мужской род на -ь
+            else if (wordLower.endsWith("ь") && genus == Genus.MASCULINE) {
+                stem = wordLower.substring(0, length - 1);
+                
+                declensionVal.put(Declension.NOMINATIVE, wordLower);
+                declensionVal.put(Declension.GENITIVE, stem + "я");
+                declensionVal.put(Declension.DATIVE, stem + "ю");
+                declensionVal.put(Declension.ACCUSTIVE, stem + "я");
+                declensionVal.put(Declension.CREATIVE, stem + "ем");
+                declensionVal.put(Declension.PREPOSITIONAL, stem + "е");
+            }
+            
+            // Разносклоняемые (время, имя и т.д.)
+            else if (wordLower.equals("время") || wordLower.equals("имя") || 
+                     wordLower.equals("племя") || wordLower.equals("семя")) {
+                stem = wordLower.substring(0, length - 1);
+                
+                declensionVal.put(Declension.NOMINATIVE, wordLower);
+                declensionVal.put(Declension.GENITIVE, stem + "ени");
+                declensionVal.put(Declension.DATIVE, stem + "ени");
+                declensionVal.put(Declension.ACCUSTIVE, wordLower);
+                declensionVal.put(Declension.CREATIVE, stem + "енем");
+                declensionVal.put(Declension.PREPOSITIONAL, stem + "ени");
+            }
+            
+            else {
+                // Если ничего не подошло, копируем значение
+                for (Declension d : Declension.values()) {
+                    declensionVal.put(d, wordLower);
+                }
+            }
         }
         
-        // Восстанавливаем оригинальный регистр для первой буквы
+        // ПРИЛАГАТЕЛЬНЫЕ
+        else if (partOfSpeech == PartOfSpeech.ADJECTIVE) {
+            
+            // Твердая основа (мужской род на -ый, -ой)
+            if (wordLower.endsWith("ый") || wordLower.endsWith("ой")) {
+                stem = wordLower.substring(0, length - 2);
+                
+                declensionVal.put(Declension.NOMINATIVE, wordLower);
+                declensionVal.put(Declension.GENITIVE, stem + "ого");
+                declensionVal.put(Declension.DATIVE, stem + "ому");
+                declensionVal.put(Declension.ACCUSTIVE, wordLower.endsWith("ой") ? stem + "ого" : wordLower);
+                declensionVal.put(Declension.CREATIVE, stem + "ым");
+                declensionVal.put(Declension.PREPOSITIONAL, stem + "ом");
+            }
+            
+            // Мягкая основа (мужской род на -ий)
+            else if (wordLower.endsWith("ий") && genus == Genus.MASCULINE) {
+                stem = wordLower.substring(0, length - 2);
+                
+                declensionVal.put(Declension.NOMINATIVE, wordLower);
+                declensionVal.put(Declension.GENITIVE, stem + "его");
+                declensionVal.put(Declension.DATIVE, stem + "ему");
+                declensionVal.put(Declension.ACCUSTIVE, wordLower);
+                declensionVal.put(Declension.CREATIVE, stem + "им");
+                declensionVal.put(Declension.PREPOSITIONAL, stem + "ем");
+            }
+            
+            // Женский род на -ая, -яя
+            else if (wordLower.endsWith("ая") || wordLower.endsWith("яя")) {
+                stem = wordLower.substring(0, length - 2);
+                
+                declensionVal.put(Declension.NOMINATIVE, wordLower);
+                declensionVal.put(Declension.GENITIVE, stem + (wordLower.endsWith("ая") ? "ой" : "ей"));
+                declensionVal.put(Declension.DATIVE, stem + (wordLower.endsWith("ая") ? "ой" : "ей"));
+                declensionVal.put(Declension.ACCUSTIVE, stem + (wordLower.endsWith("ая") ? "ую" : "юю"));
+                declensionVal.put(Declension.CREATIVE, stem + (wordLower.endsWith("ая") ? "ой" : "ей"));
+                declensionVal.put(Declension.PREPOSITIONAL, stem + (wordLower.endsWith("ая") ? "ой" : "ей"));
+            }
+            
+            // Средний род на -ое, -ее
+            else if (wordLower.endsWith("ое") || wordLower.endsWith("ее")) {
+                stem = wordLower.substring(0, length - 2);
+                
+                declensionVal.put(Declension.NOMINATIVE, wordLower);
+                declensionVal.put(Declension.GENITIVE, stem + (wordLower.endsWith("ое") ? "ого" : "его"));
+                declensionVal.put(Declension.DATIVE, stem + (wordLower.endsWith("ое") ? "ому" : "ему"));
+                declensionVal.put(Declension.ACCUSTIVE, wordLower);
+                declensionVal.put(Declension.CREATIVE, stem + (wordLower.endsWith("ое") ? "ым" : "им"));
+                declensionVal.put(Declension.PREPOSITIONAL, stem + (wordLower.endsWith("ое") ? "ом" : "ем"));
+            }
+            
+            else {
+                for (Declension d : Declension.values()) {
+                    declensionVal.put(d, wordLower);
+                }
+            }
+        }
+        
+        // ОСТАЛЬНЫЕ ЧАСТИ РЕЧИ
+        else {
+            for (Declension d : Declension.values()) {
+                declensionVal.put(d, wordLower);
+            }
+        }
+        
+        // Восстанавливаем регистр для первой буквы
         if (Character.isUpperCase(value.charAt(0))) {
             for (Map.Entry<Declension, String> entry : declensionVal.entrySet()) {
                 String val = entry.getValue();
@@ -132,18 +224,16 @@ public class Word {
     }
     
     /**
-    * Метод для генерации временных форм глагола
-    * Заполняет timesVal формами прошедшего и будущего времени
-    */
+     * метод для генерации временных форм глагола
+     */
     public void generateTenses() {
         if (value == null || value.isEmpty()) {
             return;
         }
 
-        // Очищаем предыдущие временные формы
         timesVal.clear();
 
-        // Если это не глагол - просто копируем значение во все времена
+        // Если это не глагол - копируем значение
         if (partOfSpeech != PartOfSpeech.VERB) {
             timesVal.put(Time.PRESENT, value);
             timesVal.put(Time.PAST, value);
@@ -154,122 +244,90 @@ public class Word {
         String wordLower = value.toLowerCase();
         int length = wordLower.length();
 
-        // Определяем тип глагола по окончанию
+        // Определяем тип глагола
         if (wordLower.endsWith("ть")) {
-            // Инфинитив на -ть (например, "делать", "говорить")
+            // 1 спряжение (читать, писать)
             String stem = wordLower.substring(0, length - 2);
-
-            // Настоящее время (для инфинитива используем исходную форму)
+            String lastConsonant = stem.length() > 0 ? stem.substring(stem.length() - 1) : "";
+            
             timesVal.put(Time.PRESENT, value);
-
-            // Прошедшее время (зависит от рода)
-            if (genus == Genus.MASCULINE) {
+            
+            // Прошедшее время
+            if (genus == Genus.MASCULINE || genus == Genus.NONE) {
                 timesVal.put(Time.PAST, stem + "л");
             } else if (genus == Genus.FEMININE) {
                 timesVal.put(Time.PAST, stem + "ла");
             } else if (genus == Genus.NEUTER) {
                 timesVal.put(Time.PAST, stem + "ло");
             } else {
-                // Если род не указан, используем мужской род по умолчанию
-                timesVal.put(Time.PAST, stem + "л");
+                timesVal.put(Time.PAST, stem + "ли");
             }
-
-            // Будущее время (для несовершенного вида - сложное, для совершенного - простое)
-            // Для простоты используем сложное будущее время
+            
+            // Настоящее время (для невозвратных глаголов)
+            if (!wordLower.endsWith("ся") && !wordLower.endsWith("сь")) {
+                if (wordLower.endsWith("ать") || wordLower.endsWith("ять")) {
+                    timesVal.put(Time.PRESENT, stem + "ет");
+                } else if (wordLower.endsWith("ить")) {
+                    timesVal.put(Time.PRESENT, stem + "ит");
+                }
+            }
+            
             timesVal.put(Time.FUTURE, "будет " + value);
         }
+        
         else if (wordLower.endsWith("ти")) {
-            // Инфинитив на -ти (например, "нести", "везти")
             String stem = wordLower.substring(0, length - 2);
-
+            
             timesVal.put(Time.PRESENT, value);
-            timesVal.put(Time.PAST, stem + "л");
+            
+            if (genus == Genus.MASCULINE || genus == Genus.NONE) {
+                timesVal.put(Time.PAST, stem + "л");
+            } else if (genus == Genus.FEMININE) {
+                timesVal.put(Time.PAST, stem + "ла");
+            } else if (genus == Genus.NEUTER) {
+                timesVal.put(Time.PAST, stem + "ло");
+            } else {
+                timesVal.put(Time.PAST, stem + "ли");
+            }
+            
             timesVal.put(Time.FUTURE, "будет " + value);
         }
+        
         else if (wordLower.endsWith("чь")) {
-            // Инфинитив на -чь (например, "беречь", "печь", "стричь")
             String stem = wordLower.substring(0, length - 2);
-
+            
             timesVal.put(Time.PRESENT, value);
-
-            // Особое образование прошедшего времени для глаголов на -чь
-            if (wordLower.equals("беречь")) {
-                timesVal.put(Time.PAST, genus == Genus.FEMININE ? "берегла" : "берег");
+            
+            // Особые формы для глаголов на -чь
+            if (wordLower.equals("мочь")) {
+                timesVal.put(Time.PAST, genus == Genus.FEMININE ? "могла" : "мог");
             } else if (wordLower.equals("печь")) {
                 timesVal.put(Time.PAST, genus == Genus.FEMININE ? "пекла" : "пек");
-            } else if (wordLower.equals("стричь")) {
-                timesVal.put(Time.PAST, genus == Genus.FEMININE ? "стригла" : "стриг");
-            } else if (wordLower.equals("жечь")) {
-                timesVal.put(Time.PAST, genus == Genus.FEMININE ? "жгла" : "жёг");
+            } else if (wordLower.equals("беречь")) {
+                timesVal.put(Time.PAST, genus == Genus.FEMININE ? "берегла" : "берег");
             } else {
                 timesVal.put(Time.PAST, stem + "г" + (genus == Genus.FEMININE ? "ла" : ""));
             }
-
+            
             timesVal.put(Time.FUTURE, "будет " + value);
         }
+        
         else if (wordLower.endsWith("нуть")) {
-            // Глаголы на -нуть (например, "прыгнуть", "крикнуть")
             String stem = wordLower.substring(0, length - 4);
-
+            
             timesVal.put(Time.PRESENT, value);
             timesVal.put(Time.PAST, stem + "нул");
-            timesVal.put(Time.FUTURE, value); // для совершенного вида
+            timesVal.put(Time.FUTURE, value);
         }
-        else if (wordLower.endsWith("ать") || wordLower.endsWith("ять")) {
-            // Глаголы на -ать, -ять (например, "читать", "гулять")
-            String stem = wordLower.substring(0, length - 3);
-            String ending = wordLower.substring(length - 3);
-
-            timesVal.put(Time.PRESENT, value);
-
-            // Определяем основу для прошедшего времени
-            if (ending.equals("ать")) {
-                timesVal.put(Time.PAST, stem + "ал");
-            } else if (ending.equals("ять")) {
-                timesVal.put(Time.PAST, stem + "ял");
-            }
-
-            // Корректировка по роду
-            String pastForm = timesVal.get(Time.PAST);
-            if (pastForm != null) {
-                if (genus == Genus.FEMININE) {
-                    timesVal.put(Time.PAST, pastForm + "а");
-                } else if (genus == Genus.NEUTER) {
-                    timesVal.put(Time.PAST, pastForm + "о");
-                } else if (genus == Genus.PLURAL) {
-                    timesVal.put(Time.PAST, pastForm + "и");
-                }
-            }
-
-            timesVal.put(Time.FUTURE, "будет " + value);
-        }
-        else if (wordLower.endsWith("ить")) {
-            // Глаголы на -ить (например, "говорить", "любить")
-            String stem = wordLower.substring(0, length - 3);
-
-            timesVal.put(Time.PRESENT, value);
-            timesVal.put(Time.PAST, stem + "ил");
-
-            // Корректировка по роду
-            String pastForm = timesVal.get(Time.PAST);
-            if (genus == Genus.FEMININE) {
-                timesVal.put(Time.PAST, pastForm + "а");
-            } else if (genus == Genus.NEUTER) {
-                timesVal.put(Time.PAST, pastForm + "о");
-            } else if (genus == Genus.PLURAL) {
-                timesVal.put(Time.PAST, pastForm + "и");
-            }
-
-            timesVal.put(Time.FUTURE, "будет " + value);
-        }
+        
         else {
             // Для остальных случаев
             timesVal.put(Time.PRESENT, value);
-            timesVal.put(Time.PAST, value + " (прошедшее)");
-            timesVal.put(Time.FUTURE, value + " (будущее)");
+            timesVal.put(Time.PAST, value.replace("ть", "л").replace("ти", "л"));
+            timesVal.put(Time.FUTURE, "будет " + value);
         }
 
-        // Восстанавливаем оригинальный регистр для первой буквы
+        // Восстанавливаем регистр
         if (Character.isUpperCase(value.charAt(0))) {
             for (Map.Entry<Time, String> entry : timesVal.entrySet()) {
                 String val = entry.getValue();
